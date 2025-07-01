@@ -1,5 +1,8 @@
 # The mock server for AIRMX Pro
 
+[![Test](https://github.com/openairmx/server/actions/workflows/test.yml/badge.svg)](https://github.com/openairmx/server/actions/workflows/test.yml)
+[![MIT License](https://img.shields.io/github/license/openairmx/server)](https://github.com/openairmx/server)
+
 This repository contains a mock server used to enable AIRMX Pro devices to
 communicate. The server allows devices to register themselves with an MQTT
 server, periodically synchronize the date and time, and facilitate device
