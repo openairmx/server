@@ -1,18 +1,18 @@
 import { createServer } from 'node:http'
 
 const server = createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' })
-
-  if (req.method === 'GET' && req.url === '/gettime') {
-    res.end(JSON.stringify({
-      time: Math.floor(Date.now() / 1000)
-    }))
-  } else if (req.method === 'GET' && req.url.startsWith('/eagle')) {
-    res.end(JSON.stringify({
-      status: 200, data: { eagleId: 0 }
-    }))
-  } else {
+  if (req.method === 'GET' && req.url === '/') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' })
     res.end('It works!\n')
+  } else if (req.method === 'GET' && req.url === '/gettime') {
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ time: Math.floor(Date.now() / 1000) }))
+  } else if (req.method === 'GET' && req.url.startsWith('/eagle')) {
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ status: 200, data: { eagleId: 0 } }))
+  } else {
+    res.writeHead(404)
+    res.end()
   }
 })
 
