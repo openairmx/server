@@ -1,3 +1,5 @@
+'use strict'
+
 import * as http from 'node:http'
 import assert from 'node:assert'
 import test, { after, before } from 'node:test'
