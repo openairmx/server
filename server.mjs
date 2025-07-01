@@ -3,60 +3,106 @@
 import { DatabaseSync } from 'node:sqlite'
 import { createServer } from 'node:http'
 
-const database = new DatabaseSync(':memory:')
+const initializeDatabase = () => {
+  const db = new DatabaseSync(':memory:')
 
-database.exec(`
-  CREATE TABLE eagles(
-    id INTEGER PRIMARY KEY,
-    mac_address TEXT,
-    key TEXT
-  ) STRICT
-`)
+  db.exec(`
+    CREATE TABLE eagles(
+      id INTEGER PRIMARY KEY,
+      mac_address TEXT,
+      key TEXT
+    ) STRICT
+  `)
 
-const server = createServer((req, res) => {
-  if (req.method === 'GET' && req.url === '/') {
-    res.writeHead(200, { 'Content-Type': 'text/plain' })
-    res.end('It works!\n')
-  } else if (req.method === 'GET' && req.url === '/gettime') {
-    res.writeHead(200, { 'Content-Type': 'application/json' })
-    res.end(JSON.stringify({ time: Math.floor(Date.now() / 1000) }))
-  } else if (req.method === 'GET' && req.url.startsWith('/eagle')) {
-    const params = new URLSearchParams(req.url.substring('/eagle'.length))
-    const mac = params.get('mac')
-    const key = params.get('key')
-    if (mac === null || key === null) {
-      res.writeHead(400, { 'Content-Type': 'application/json' })
-      res.end('{}\n')
-      return
+  return db
+}
+
+const indexController = (req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' })
+  res.end('It works!\n')
+}
+
+const getTimeControlller = (req, res) => {
+  res.writeHead(200, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify({ time: Math.floor(Date.now() / 1000) }))
+}
+
+const eagleController = (req, res) => {
+  const [, query] = req.url.split('?')
+  const params = new URLSearchParams(query)
+  const mac = params.get('mac')
+  const key = params.get('key')
+
+  if (mac === null || key === null) {
+    res.writeHead(400, { 'Content-Type': 'application/json' })
+    res.end('{}\n')
+    return
+  }
+
+  const record = database
+    .prepare('INSERT INTO eagles(mac_address, key) VALUES(?, ?)')
+    .run(mac, key)
+
+  res.writeHead(200, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify({
+    status: 200,
+    data: {
+      eagleId: record.lastInsertRowid
     }
-    const insert = database.prepare('INSERT INTO eagles(mac_address, key) VALUES(?, ?)')
-    const record = insert.run(mac, key)
-    res.writeHead(200, { 'Content-Type': 'application/json' })
-    res.end(JSON.stringify({ status: 200, data: { eagleId: record.lastInsertRowid } }))
-  } else if (req.method === 'GET' && req.url.startsWith('/exchange')) {
-    const params = new URLSearchParams(req.url.substring('/exchange'.length))
-    const device = params.get('device')
-    if (device === null) {
-      res.writeHead(422)
-      res.end()
-      return
-    }
-    const query = database.prepare('SELECT * FROM eagles WHERE id = ?').get(device)
-    if (query === undefined) {
-      res.writeHead(404)
-      res.end()
-      return
-    }
-    res.writeHead(200)
-    res.end(JSON.stringify({ key: query.key }))
-  } else {
+  }))
+}
+
+const exchangeController = (req, res) => {
+  const [, query] = req.url.split('?')
+  const params = new URLSearchParams(query)
+  const device = params.get('device')
+
+  if (device === null) {
+    res.writeHead(422)
+    res.end()
+    return
+  }
+
+  const record = database
+    .prepare('SELECT * FROM eagles WHERE id = ?')
+    .get(device)
+
+  if (record === undefined) {
     res.writeHead(404)
     res.end()
+    return
   }
+
+  res.writeHead(200, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify({ key: record.key }))
+}
+
+const notFoundController = (req, res) => {
+  res.writeHead(404)
+  res.end()
+}
+
+const server = createServer((req, res) => {
+  const routes = [
+    { method: 'GET', path: '/', handler: indexController },
+    { method: 'GET', path: '/gettime', handler: getTimeControlller },
+    { method: 'GET', path: '/eagle', handler: eagleController },
+    { method: 'GET', path: '/exchange', handler: exchangeController },
+  ]
+
+  const [path] = req.url.split('?')
+  for (const route of routes) {
+    if (req.method === route.method && path === route.path) {
+      return route.handler(req, res)
+    }
+  }
+
+  notFoundController(req, res)
 })
 
 const hostname = process.env.HOSTNAME || '0.0.0.0'
 const port = process.env.PORT || 80
+const database = initializeDatabase()
 
 server.listen(port, hostname, () => {
   console.log(`Listening on ${hostname}:${port}`)
