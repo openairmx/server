@@ -10,6 +10,12 @@ const port = 8090
 const baseUrl = `http://${hostname}:${port}`
 let server = null
 
+const createDevice = async (mac, key) => {
+  const response = await fetch(`${baseUrl}/eagle?mac=${mac}&key=${key}`)
+  const data = await response.json()
+  return data.data.eagleId
+}
+
 before(() => new Promise((resolve, reject) => {
   const nodeBinary = process.argv[0]
   server = spawn(nodeBinary, ['server.mjs'], {
@@ -110,4 +116,26 @@ test('device registration endpoint returns bad request if missing encryption key
   }).on('error', (err) => {
     assert.fail(`HTTP request failed: ${err.message}`)
   })
+})
+
+test('exchange endpoint', async () => {
+  const stubMacAddress = '00:00:00:00:00'
+  const stubKey = '00000000000000000000000000000000'
+
+  const deviceId = await createDevice(stubMacAddress, stubKey)
+  const res = await fetch(`${baseUrl}/exchange?device=${deviceId}`)
+  assert.strictEqual(res.status, 200)
+
+  const data = await res.json()
+  assert.strictEqual(data.key, stubKey)
+})
+
+test('exchange endpoint returns unprocessable content when device id is missing', async () => {
+  const res = await fetch(`${baseUrl}/exchange`)
+  assert.strictEqual(res.status, 422)
+})
+
+test('exchange endpoint returns not found when device does not exist', async () => {
+  const res = await fetch(`${baseUrl}/exchange?device=9999`)
+  assert.strictEqual(res.status, 404)
 })

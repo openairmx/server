@@ -33,6 +33,22 @@ const server = createServer((req, res) => {
     const record = insert.run(mac, key)
     res.writeHead(200, { 'Content-Type': 'application/json' })
     res.end(JSON.stringify({ status: 200, data: { eagleId: record.lastInsertRowid } }))
+  } else if (req.method === 'GET' && req.url.startsWith('/exchange')) {
+    const params = new URLSearchParams(req.url.substring('/exchange'.length))
+    const device = params.get('device')
+    if (device === null) {
+      res.writeHead(422)
+      res.end()
+      return
+    }
+    const query = database.prepare('SELECT * FROM eagles WHERE id = ?').get(device)
+    if (query === undefined) {
+      res.writeHead(404)
+      res.end()
+      return
+    }
+    res.writeHead(200)
+    res.end(JSON.stringify({ key: query.key }))
   } else {
     res.writeHead(404)
     res.end()
