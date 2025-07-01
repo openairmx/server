@@ -1,6 +1,5 @@
 'use strict'
 
-import * as http from 'node:http'
 import assert from 'node:assert'
 import test, { after, before } from 'node:test'
 import { spawn } from 'node:child_process'
@@ -48,74 +47,39 @@ after(() => {
   }
 })
 
-test('current time endpoint', (t, done) => {
-  http.get(`${baseUrl}/gettime`, (res) => {
-    assert.strictEqual(res.statusCode, 200)
-    assert.strictEqual(res.headers['content-type'], 'application/json')
-
-    let data = ''
-
-    res.on('data', (chunk) => {
-      data += chunk
-    })
-
-    res.on('end', () => {
-      const decoded = JSON.parse(data)
-      const current = Math.floor(Date.now() / 1000)
-      assert.ok('time' in decoded)
-      assert.ok(typeof decoded.time === 'number')
-      assert.ok(current - decoded.time < 3)
-      done()
-    })
-  }).on('error', (err) => {
-    assert.fail(`HTTP request failed: ${err.message}`)
-  })
+test('current time endpoint', async () => {
+  const res = await fetch(`${baseUrl}/gettime`)
+  assert.strictEqual(res.status, 200)
+  assert.strictEqual(res.headers.get('content-type'), 'application/json')
+  const data = await res.json()
+  const current = Math.floor(Date.now() / 1000)
+  assert.ok(typeof data.time === 'number')
+  assert.ok(current - data.time < 3)
 })
 
-test('device registration endpoint', (t, done) => {
+test('device registration endpoint', async () => {
   const stubMacAddress = '00:00:00:00:00'
   const stubKey = '00000000000000000000000000000000'
-  http.get(`${baseUrl}/eagle?mac=${stubMacAddress}&key=${stubKey}`, (res) => {
-    assert.strictEqual(res.statusCode, 200)
-    assert.strictEqual(res.headers['content-type'], 'application/json')
-
-    let data = ''
-
-    res.on('data', (chunk) => {
-      data += chunk
-    })
-
-    res.on('end', () => {
-      const decoded = JSON.parse(data)
-      assert.strictEqual(decoded.status, 200)
-      assert.ok(typeof decoded.data?.eagleId === 'number')
-      done()
-    })
-  }).on('error', (err) => {
-    assert.fail(`HTTP request failed: ${err.message}`)
-  })
+  const res = await fetch(`${baseUrl}/eagle?mac=${stubMacAddress}&key=${stubKey}`)
+  assert.strictEqual(res.status, 200)
+  assert.strictEqual(res.headers.get('content-type'), 'application/json')
+  const data = await res.json()
+  assert.strictEqual(data.status, 200)
+  assert.ok(typeof data.data?.eagleId === 'number')
 })
 
-test('device registration endpoint returns bad request if missing mac address', (t, done) => {
+test('device registration endpoint returns bad request if missing mac address', async () => {
   const stubKey = '00000000000000000000000000000000'
-  http.get(`${baseUrl}/eagle?key=${stubKey}`, (res) => {
-    assert.strictEqual(res.statusCode, 400)
-    assert.strictEqual(res.headers['content-type'], 'application/json')
-    done()
-  }).on('error', (err) => {
-    assert.fail(`HTTP request failed: ${err.message}`)
-  })
+  const res = await fetch(`${baseUrl}/eagle?key=${stubKey}`)
+  assert.strictEqual(res.status, 400)
+  assert.strictEqual(res.headers.get('content-type'), 'application/json')
 })
 
-test('device registration endpoint returns bad request if missing encryption key', (t, done) => {
+test('device registration endpoint returns bad request if missing encryption key', async () => {
   const stubMacAddress = '00:00:00:00:00'
-  http.get(`${baseUrl}/eagle?mac=${stubMacAddress}`, (res) => {
-    assert.strictEqual(res.statusCode, 400)
-    assert.strictEqual(res.headers['content-type'], 'application/json')
-    done()
-  }).on('error', (err) => {
-    assert.fail(`HTTP request failed: ${err.message}`)
-  })
+  const res = await fetch(`${baseUrl}/eagle?mac=${stubMacAddress}`)
+  assert.strictEqual(res.status, 400)
+  assert.strictEqual(res.headers.get('content-type'), 'application/json')
 })
 
 test('exchange endpoint', async () => {
