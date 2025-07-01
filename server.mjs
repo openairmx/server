@@ -16,6 +16,9 @@ const server = createServer((req, res) => {
   }
 })
 
-server.listen(80, '0.0.0.0', () => {
-  console.log('Listening on 0.0.0.0:80')
+const hostname = process.env.HOSTNAME || '0.0.0.0'
+const port = process.env.PORT || 80
+
+server.listen(port, hostname, () => {
+  console.log(`Listening on ${hostname}:${port}`)
 })
