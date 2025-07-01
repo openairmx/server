@@ -67,7 +67,9 @@ test('current time endpoint', (t, done) => {
 })
 
 test('device registration endpoint', (t, done) => {
-  http.get(`${baseUrl}/eagle`, (res) => {
+  const stubMacAddress = '00:00:00:00:00'
+  const stubKey = '00000000000000000000000000000000'
+  http.get(`${baseUrl}/eagle?mac=${stubMacAddress}&key=${stubKey}`, (res) => {
     assert.strictEqual(res.statusCode, 200)
     assert.strictEqual(res.headers['content-type'], 'application/json')
 
@@ -83,6 +85,28 @@ test('device registration endpoint', (t, done) => {
       assert.ok(typeof decoded.data?.eagleId === 'number')
       done()
     })
+  }).on('error', (err) => {
+    assert.fail(`HTTP request failed: ${err.message}`)
+  })
+})
+
+test('device registration endpoint returns bad request if missing mac address', (t, done) => {
+  const stubKey = '00000000000000000000000000000000'
+  http.get(`${baseUrl}/eagle?key=${stubKey}`, (res) => {
+    assert.strictEqual(res.statusCode, 400)
+    assert.strictEqual(res.headers['content-type'], 'application/json')
+    done()
+  }).on('error', (err) => {
+    assert.fail(`HTTP request failed: ${err.message}`)
+  })
+})
+
+test('device registration endpoint returns bad request if missing encryption key', (t, done) => {
+  const stubMacAddress = '00:00:00:00:00'
+  http.get(`${baseUrl}/eagle?mac=${stubMacAddress}`, (res) => {
+    assert.strictEqual(res.statusCode, 400)
+    assert.strictEqual(res.headers['content-type'], 'application/json')
+    done()
   }).on('error', (err) => {
     assert.fail(`HTTP request failed: ${err.message}`)
   })
