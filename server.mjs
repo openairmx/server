@@ -30,10 +30,9 @@ const getTimeControlller = (req, res) => {
 const eagleController = (req, res) => {
   const [, query] = req.url.split('?')
   const params = new URLSearchParams(query)
-  const mac = params.get('mac')
-  const key = params.get('key')
+  const { mac, key } = JSON.parse(params.get('params') || '{}')
 
-  if (mac === null || key === null) {
+  if (mac === undefined || key === undefined) {
     res.writeHead(400, { 'Content-Type': 'application/json' })
     res.end('{}\n')
     return
