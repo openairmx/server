@@ -142,6 +142,19 @@ test('device registration endpoint returns not found if path is not supported', 
   assert.strictEqual(res.status, 404)
 })
 
+test('device status endpoint', async () => {
+  const params = new URLSearchParams({
+    source: 5,
+    reqid: '0000000000',
+    eagleId: 1,
+    path: 'eagle/GET/online',
+    params: '{}',
+    sig: '00000000000000000000000000000000'
+  })
+  const res = await fetch(`${baseUrl}/eagle?${params.toString()}`)
+  assert.strictEqual(res.status, 200)
+})
+
 test('exchange endpoint', async () => {
   const stubMacAddress = '0000000000'
   const stubKey = '00000000000000000000000000000000'
