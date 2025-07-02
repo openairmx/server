@@ -39,7 +39,7 @@ HOSTNAME="127.0.0.1" PORT=8080 node server.mjs
     seconds back to the device.
   </dd>
 
-  <dt>GET /eagle</dt>
+  <dt>GET /eagle?path=eagle/GET/genId</dt>
   <dd>
     During the pairing process, when the device receives the Wi-Fi credentials
     you provide, it registers itself with this endpoint along with its MAC
@@ -47,6 +47,17 @@ HOSTNAME="127.0.0.1" PORT=8080 node server.mjs
     your device remotely later. We store this device information in an
     in-memory SQLite database and wait for you to exchange your device key at
     the final stage of the pairing process.
+  </dd>
+
+  <dt>GET /eagle?path=eagle/GET/online</dt>
+  <dd>
+    <p>The device will access this endpoint immediately after it receives the
+    Wi-Fi credentials during the pairing process. Based on the hints from
+    the path name and payload, we believe this endpoint allows the device to
+    determine if it has successfully connected to the AIRMX network.</p>
+    <p>Therefore, regardless of the parameters the API receives, we will
+    always provide it with a predetermined response, making it appear as
+    though the air monitor and the AIRMX Pro unit are already connected.</p>
   </dd>
 
   <dt>GET /exchange</dt>

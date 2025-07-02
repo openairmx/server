@@ -35,6 +35,9 @@ const eagleController = (req, res) => {
     case 'eagle/GET/genId':
       eagleGenIdController(req, res)
       break
+    case 'eagle/GET/online':
+      eagleOnlineController(req, res)
+      break
     default:
       notFoundController(req, res)
       break
@@ -62,6 +65,17 @@ const eagleGenIdController = (req, res) => {
     status: 200,
     data: {
       eagleId: record.lastInsertRowid
+    }
+  }))
+}
+
+const eagleOnlineController = (req, res) => {
+  res.writeHead(200, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify({
+    status: 200,
+    data: {
+      snow: 1,  // Air quality monitor
+      eagle: 1  // The AIRMX Pro unit
     }
   }))
 }
