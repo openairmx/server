@@ -136,6 +136,12 @@ test('device registration endpoint returns bad request if missing encryption key
   assert.strictEqual(res.headers.get('content-type'), 'application/json')
 })
 
+test('device registration endpoint returns not found if path is not supported', async () => {
+  const params = new URLSearchParams({ path: 'eagle/GET/foo' })
+  const res = await fetch(`${baseUrl}/eagle?${params.toString()}`)
+  assert.strictEqual(res.status, 404)
+})
+
 test('exchange endpoint', async () => {
   const stubMacAddress = '0000000000'
   const stubKey = '00000000000000000000000000000000'
