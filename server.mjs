@@ -30,10 +30,24 @@ const getTimeControlller = (req, res) => {
 const eagleController = (req, res) => {
   const [, query] = req.url.split('?')
   const params = new URLSearchParams(query)
-  const mac = params.get('mac')
-  const key = params.get('key')
 
-  if (mac === null || key === null) {
+  switch (params.get('path')) {
+    case 'eagle/GET/genId':
+      eagleGenIdController(req, res)
+      break
+    default:
+      notFoundController(req, res)
+      break
+  }
+}
+
+const eagleGenIdController = (req, res) => {
+  const [, query] = req.url.split('?')
+  const params = new URLSearchParams(query)
+  const { mac, key } = JSON.parse(params.get('params') || '{}')
+
+  if (mac === undefined || mac === null
+    || key === undefined || key === null) {
     res.writeHead(400, { 'Content-Type': 'application/json' })
     res.end('{}\n')
     return

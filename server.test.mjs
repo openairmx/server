@@ -10,7 +10,21 @@ const baseUrl = `http://${hostname}:${port}`
 let server = null
 
 const createDevice = async (mac, key) => {
-  const response = await fetch(`${baseUrl}/eagle?mac=${mac}&key=${key}`)
+  const params = new URLSearchParams({
+    source: 5,
+    reqid: '0000000000',
+    eagleId: '',
+    path: 'eagle/GET/genId',
+    params: JSON.stringify({
+      mac,
+      key,
+      version: '00.00.00',
+      isDenoise: 1,
+      hardVersion: 1
+    }),
+    sig: '00000000000000000000000000000000'
+  })
+  const response = await fetch(`${baseUrl}/eagle?${params.toString()}`)
   const data = await response.json()
   return data.data.eagleId
 }
@@ -58,9 +72,23 @@ test('current time endpoint', async () => {
 })
 
 test('device registration endpoint', async () => {
-  const stubMacAddress = '00:00:00:00:00'
+  const stubMacAddress = '0000000000'
   const stubKey = '00000000000000000000000000000000'
-  const res = await fetch(`${baseUrl}/eagle?mac=${stubMacAddress}&key=${stubKey}`)
+  const params = new URLSearchParams({
+    source: 5,
+    reqid: '0000000000',
+    eagleId: '',
+    path: 'eagle/GET/genId',
+    params: JSON.stringify({
+      mac: stubMacAddress,
+      key: stubKey,
+      version: '00.00.00',
+      isDenoise: 1,
+      hardVersion: 1
+    }),
+    sig: '00000000000000000000000000000000'
+  })
+  const res = await fetch(`${baseUrl}/eagle?${params.toString()}`)
   assert.strictEqual(res.status, 200)
   assert.strictEqual(res.headers.get('content-type'), 'application/json')
   const data = await res.json()
@@ -70,20 +98,52 @@ test('device registration endpoint', async () => {
 
 test('device registration endpoint returns bad request if missing mac address', async () => {
   const stubKey = '00000000000000000000000000000000'
-  const res = await fetch(`${baseUrl}/eagle?key=${stubKey}`)
+  const params = new URLSearchParams({
+    source: 5,
+    reqid: '0000000000',
+    eagleId: '',
+    path: 'eagle/GET/genId',
+    params: JSON.stringify({
+      key: stubKey,
+      version: '00.00.00',
+      isDenoise: 1,
+      hardVersion: 1
+    }),
+    sig: '00000000000000000000000000000000'
+  })
+  const res = await fetch(`${baseUrl}/eagle?${params.toString()}`)
   assert.strictEqual(res.status, 400)
   assert.strictEqual(res.headers.get('content-type'), 'application/json')
 })
 
 test('device registration endpoint returns bad request if missing encryption key', async () => {
-  const stubMacAddress = '00:00:00:00:00'
-  const res = await fetch(`${baseUrl}/eagle?mac=${stubMacAddress}`)
+  const stubMacAddress = '0000000000'
+  const params = new URLSearchParams({
+    source: 5,
+    reqid: '0000000000',
+    eagleId: '',
+    path: 'eagle/GET/genId',
+    params: JSON.stringify({
+      mac: stubMacAddress,
+      version: '00.00.00',
+      isDenoise: 1,
+      hardVersion: 1
+    }),
+    sig: '00000000000000000000000000000000'
+  })
+  const res = await fetch(`${baseUrl}/eagle?${params.toString()}`)
   assert.strictEqual(res.status, 400)
   assert.strictEqual(res.headers.get('content-type'), 'application/json')
 })
 
+test('device registration endpoint returns not found if path is not supported', async () => {
+  const params = new URLSearchParams({ path: 'eagle/GET/foo' })
+  const res = await fetch(`${baseUrl}/eagle?${params.toString()}`)
+  assert.strictEqual(res.status, 404)
+})
+
 test('exchange endpoint', async () => {
-  const stubMacAddress = '00:00:00:00:00'
+  const stubMacAddress = '0000000000'
   const stubKey = '00000000000000000000000000000000'
 
   const deviceId = await createDevice(stubMacAddress, stubKey)
