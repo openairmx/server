@@ -153,6 +153,9 @@ test('device status endpoint', async () => {
   })
   const res = await fetch(`${baseUrl}/eagle?${params.toString()}`)
   assert.strictEqual(res.status, 200)
+  const data = await res.json()
+  assert.strictEqual(data.data.snow, 1)
+  assert.strictEqual(data.data.eagle, 1)
 })
 
 test('exchange endpoint', async () => {
