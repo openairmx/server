@@ -46,7 +46,8 @@ const eagleGenIdController = (req, res) => {
   const params = new URLSearchParams(query)
   const { mac, key } = JSON.parse(params.get('params') || '{}')
 
-  if (mac === undefined || key === undefined) {
+  if (mac === undefined || mac === null
+    || key === undefined || key === null) {
     res.writeHead(400, { 'Content-Type': 'application/json' })
     res.end('{}\n')
     return
